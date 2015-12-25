@@ -93,6 +93,7 @@ module TimelogHelper
     Redmine::Export::CSV.generate do |csv|
       # Column headers
       headers = report.criteria.collect {|criteria| l(report.available_criteria[criteria][:label]) }
+      headers << t('field_estimated_hours') if report.criteria.include? 'issue'
       headers += report.periods
       headers << l(:label_total_time)
       csv << headers
@@ -101,6 +102,7 @@ module TimelogHelper
       # Total row
       str_total = l(:label_total_time)
       row = [ str_total ] + [''] * (report.criteria.size - 1)
+      row << @total_estimated_hours if report.criteria.include? 'issue'
       total = 0
       report.periods.each do |period|
         sum = sum_hours(select_hours(report.hours, report.columns, period.to_s))
@@ -120,6 +122,10 @@ module TimelogHelper
       row << format_criteria_value(available_criteria[criteria[level]], value).to_s
       row += [''] * (criteria.length - level - 1)
       total = 0
+      if criteria.include?('issue')
+        filtered_issues = @issues.select { |i| hours_for_value.map { |x| x["issue"].to_i }.uniq.include?(i.id) }
+        row << filtered_issues.map(&:estimated_hours).compact.sum
+      end
       periods.each do |period|
         sum = sum_hours(select_hours(hours_for_value, columns, period.to_s))
         total += sum

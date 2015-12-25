@@ -1,5 +1,5 @@
 <div class="contextual">
-<%= link_to l(:button_log_time), 
+<%= link_to l(:button_log_time),
             _new_time_entry_path(@project, @issue),
             :class => 'icon icon-time-add' if User.current.allowed_to?(:log_time, @project, :global => true) %>
 </div>
@@ -42,6 +42,9 @@
   <th><%= l_or_humanize(@report.available_criteria[criteria][:label]) %></th>
 <% end %>
 <% columns_width = (40 / (@report.periods.length+1)).to_i %>
+<% if @report.criteria.include? "issue" %>
+  <th><%= t('field_estimated_hours') %></th>
+<% end %>
 <% @report.periods.each do |period| %>
   <th class="period" style="width:<%= columns_width %>%;"><%= period %></th>
 <% end %>
@@ -54,6 +57,9 @@
   <td><%= l(:label_total_time) %></td>
   <%= ('<td></td>' * (@report.criteria.size - 1)).html_safe %>
   <% total = 0 -%>
+  <% if @report.criteria.include? "issue" %>
+    <td><%= @total_estimated_hours %></td>
+  <% end %>
   <% @report.periods.each do |period| -%>
     <% sum = sum_hours(select_hours(@report.hours, @report.columns, period.to_s)); total += sum -%>
     <td class="hours"><%= html_hours("%.2f" % sum) if sum > 0 %></td>
